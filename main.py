@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import geopy.distance
 from sklearn.model_selection import train_test_split
 import pickle
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.neighbors import KNeighborsRegressor
+
 import csv
 import json
 import random
@@ -13,6 +15,7 @@ import random
 c_coords = (55.75583333, 37.61777778)
 STATIONS = []
 # PARAMS = ('lat', 'lng', 'rooms', 'square', 'floor', 'center_distance', 'metro_dist', 'metro_quantity')
+# PARAMS = ('lat', 'lng', 'square')
 PARAMS = ('lat', 'lng', 'square')
 NEW_ITEM = {
     'item_coords': (55.7470686, 37.85781589999999),
@@ -83,6 +86,7 @@ def play_with_params(example, params=PARAMS):
         new_example.append(_)
     return feature_names, np.array(new_example, dtype=np.float)
 
+
 # with open('items.csv', newline='') as csvfile:
 #     good_data = []
 #     examples = []
@@ -96,7 +100,7 @@ def play_with_params(example, params=PARAMS):
 #             'rooms': row['rooms'],
 #             'square': row['square'],
 #             'floor': row['floor'],
-#             'target': int(float(row['total_price']) // 2000000)
+#             'target': float(row['total_price'])
 #         })
 #
 # random.shuffle(good_data)
@@ -109,32 +113,32 @@ def play_with_params(example, params=PARAMS):
 #         target.append(data['target'])
 #
 #
-# with open('examples1.pickle', 'wb') as f:
+# with open('examples_regression.pickle', 'wb') as f:
 #     pickle.dump(examples, f)
-# with open('target1.pickle', 'wb') as f:
+# with open('target_regression.pickle', 'wb') as f:
 #     pickle.dump(target, f)
 
 
-with open('examples1.pickle', 'rb') as f:
+with open('examples_regression.pickle', 'rb') as f:
     examples = pickle.load(f)
-with open('target1.pickle', 'rb') as f:
+with open('target_regression.pickle', 'rb') as f:
     target = pickle.load(f)
 
 feature_names, examples = play_with_params(examples)
 X_train, X_test, y_train, y_test = train_test_split(examples, target, random_state=0)
 dataframe = pd.DataFrame(X_train, columns=feature_names)
-grr = scatter_matrix(dataframe, c=y_train, figsize=(40, 40), marker='O', )
-rfc = RandomForestClassifier(n_jobs=-1)
+grr = scatter_matrix(dataframe, c=y_train, figsize=(30, 30), marker='O', )
+rfr = RandomForestRegressor(n_jobs=-1)
 
 
-rfc.fit(X_train, y_train)
+rfr.fit(X_train, y_train)
 
 X_new = np.array([create_new(NEW_ITEM)])
-prediction = rfc.predict(X_new)
+prediction = rfr.predict(X_new)
 print('Прогноз стоимости:')
-print(str(prediction[0] * 2) + '-' + str(prediction[0] * 2 + 2) + ' млн руб.')
-y_pred = rfc.predict(X_test)
-print("Правильность на тестовом наборе: {:.2f}".format(np.mean(y_pred == y_test)))
+print(str(prediction[0]) + ' руб.')
+y_pred = rfr.predict(X_test)
+print("Правильность на тестовом наборе: {:.2f}".format(rfr.score(X_test, y_test)))
 
 
 plt.show()
